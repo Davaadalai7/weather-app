@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import getAllCities from "./utils/get-all-cities";
 import { dayAndNightForecast } from "./utils/get-day-and-night-forecast";
-// import './index.css'
+import SearchBar from "./components/SearchBar";
+import WeatherInfo from "./components/WeatherInfo";
 
 function App() {
     const [searchValue, setSearchValue] = useState("");
@@ -17,8 +18,7 @@ function App() {
                 "https://countriesnow.space/api/v0.1/countries"
             );
             const result = await response.json();
-            const countries = result.data;
-            const cities = getAllCities(countries);
+            const cities = getAllCities(result.data);
             setAllCities(cities);
         } catch (error) {
             console.log(error);
@@ -33,23 +33,12 @@ function App() {
                 `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}`
             );
             const data = await response.json();
-            console.log("this is data", data);
             setWeatherData(data);
         } catch (error) {
             console.error("Error fetching weather data:", error);
         } finally {
             setLoading(false);
         }
-    };
-
-    const onChange = (event) => {
-        setSearchValue(event.target.value);
-        const filtered = allCities
-            .filter((el) =>
-                el.toLowerCase().startsWith(event.target.value.toLowerCase())
-            )
-            .slice(0, 5);
-        setFilteredData(filtered);
     };
 
     const onSelectCity = (city) => {
@@ -66,42 +55,25 @@ function App() {
         getCountries();
     }, []);
 
-    console.log(weatherData);
-
     return (
-        <div className="container">
-            <input
-                type="text"
-                placeholder="Search for a city"
-                value={searchValue}
-                onChange={onChange}
-            />
-            {filteredData.length > 0 && (
-                <div className="search-results">
-                    {filteredData.map((city) => (
-                        <p key={city} onClick={() => onSelectCity(city)}>
-                            {city}
-                        </p>
-                    ))}
+        <div className="w-full h-screen bg-sky-400 flex relative justify-center">
+            <div className="absolute flex top-[100px]">
+                <div className="flex rounded-[50px]">
+                    <SearchBar
+                        searchValue={searchValue}
+                        setSearchValue={setSearchValue}
+                        allCities={allCities}
+                        filteredData={filteredData}
+                        setFilteredData={setFilteredData}
+                        onSelectCity={onSelectCity}
+                    />
                 </div>
-            )}
-
-<div className="weather-info">
-    <h2>Weather for {selectedCity}</h2>
-    {loading ? (
-        <p>Loading...</p>
-    ) : weatherData ? (
-        <div>
-            <p>Temperature: {weatherData.current?.temp_c}°C</p>
-            <p>{weatherData.forecast?.forecastday[0]?.day?.condition?.text}</p>
-            <p>Humidity: {weatherData.current?.humidity}%</p>
-            <p>Wind: {weatherData.current?.wind_mph} mph</p> 
-        </div>
-    ) : (
-        <p>No weather data available</p>
-    )}
-</div>
-
+                <WeatherInfo
+                    selectedCity={selectedCity}
+                    weatherData={weatherData}
+                    loading={loading}
+                />
+            </div>
         </div>
     );
 }
